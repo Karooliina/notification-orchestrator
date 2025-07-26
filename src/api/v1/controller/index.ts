@@ -1,2 +1,2 @@
-export { notificationsRouter } from './NotificationsController';
-export { userPreferencesRouter } from './UserPreferencesController';
+export { notificationsRouter } from './notificationsController';
+export { userPreferencesRouter } from './userPreferencesController';
