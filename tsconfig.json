@@ -1,9 +1,14 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
   "compilerOptions": {
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./"
+    "rootDir": "./",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
-  "include": ["**/*.ts"],
-  "exclude": ["dist"]
+  "include": ["**/*.ts", "**/*.js"],
+  "exclude": ["dist", "node_modules"]
 }

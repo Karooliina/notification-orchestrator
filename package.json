@@ -21,9 +21,6 @@
     "coverage": "vitest run --coverage",
     "prepare": "husky"
   },
-  "imports": {
-    "@/*": "./src/*"
-  },
   "dependencies": {
     "express": "^5.1.0"
   },
