@@ -17,3 +17,5 @@
 
 # DynamoDB data
 /data
+
+/docker

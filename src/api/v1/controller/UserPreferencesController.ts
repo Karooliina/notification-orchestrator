@@ -1,17 +1,85 @@
 import { Router } from 'express';
+import { getUserPreferences, setUserPreferences, updateUserPreferences } from '@/service/UserPreferencesService';
+import z from 'zod';
+import { validateData } from '@/middleware/validateData';
 
 const router = Router();
 
-router.get('/', (req, res) => {
-  res.send('Get user preferences controller');
+const notificationPreferenceSchema = z.object({
+  notification_type: z.string(),
+  enabled: z.boolean(),
+  channels: z.array(z.enum(['email', 'sms', 'push'])).optional(),
 });
 
-router.post('/', (req, res) => {
-  res.send('Post user preferences controller');
+const dndPreferenceSchema = z.object({
+  dnd_name: z.string().min(1, { message: 'Do not disturb window name is required' }),
+  dnd_weekdays: z.array(z.number().min(0).max(6)),
+  dnd_start_time: z.string(),
+  dnd_end_time: z.string(),
 });
 
-router.put('/', (req, res) => {
-  res.send('Put user preferences controller');
+const userPreferencesSchema = z.object({
+  notification_preferences: z.array(notificationPreferenceSchema).optional(),
+  dnd_preferences: z.array(dndPreferenceSchema).optional(),
+});
+
+router.get('/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const { notification_preferences, dnd_preferences } = await getUserPreferences(userId);
+
+    if (!notification_preferences?.length && !dnd_preferences?.length) {
+      res.status(404).json({ status: 404, success: false, error: 'User preferences not found' });
+      return;
+    }
+    res.status(200).json({ status: 200, success: true, data: { userId, notification_preferences, dnd_preferences } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, success: false, error: 'Failed to get user preferences' });
+  }
+});
+
+router.post('/:userId', validateData(userPreferencesSchema), async (req, res) => {
+  const { userId } = req.params;
+  const { notification_preferences, dnd_preferences } = req.body;
+
+  if (!notification_preferences?.length && !dnd_preferences?.length) {
+    res.status(400).json({ status: 400, success: false, error: 'No notification or DND settings provided' });
+    return;
+  }
+
+  if (dnd_preferences?.length) {
+    dnd_preferences.some((dnd) => {
+      if (!dnd.dnd_weekdays?.length && !dnd.dnd_start_time && !dnd.dnd_end_time) {
+        res.status(400).json({ status: 400, success: false, error: 'DND weekdays are required' });
+        return;
+      }
+    });
+  }
+  try {
+    const setUserPreferencesResult = await setUserPreferences(userId, notification_preferences, dnd_preferences);
+    res.status(200).json({ status: 200, success: true, data: setUserPreferencesResult });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, success: false, error: 'Failed to set user preferences' });
+  }
+});
+
+router.put('/:userId', validateData(userPreferencesSchema), async (req, res) => {
+  const { userId } = req.params;
+  const { notification_preferences, dnd_preferences } = req.body;
+
+  if (!notification_preferences?.length && !dnd_preferences?.length) {
+    res.status(400).json({ status: 400, success: false, error: 'No notification or DND settings provided' });
+    return;
+  }
+  try {
+    const updateUserPreferencesResult = await updateUserPreferences(userId, notification_preferences, dnd_preferences);
+    res.status(200).json({ status: 200, success: true, data: updateUserPreferencesResult });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: 500, success: false, error: 'Failed to update user preferences' });
+  }
 });
 
 export const userPreferencesRouter = router;
