@@ -14,11 +14,23 @@ export const createUserDNDTable = async () => {
       TableName: 'UserDND',
       KeySchema: [
         { AttributeName: 'userId', KeyType: 'HASH' },
-        { AttributeName: 'dndweekdays#dndstarttime#dndendtime', KeyType: 'RANGE' },
+
+        { AttributeName: 'dndId', KeyType: 'RANGE' },
       ],
       AttributeDefinitions: [
         { AttributeName: 'userId', AttributeType: 'S' },
-        { AttributeName: 'dndweekdays#dndstarttime#dndendtime', AttributeType: 'S' },
+        { AttributeName: 'dndId', AttributeType: 'S' },
+        { AttributeName: 'dayStartEnd', AttributeType: 'S' },
+      ],
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: 'UserDayTimeIndex',
+          KeySchema: [
+            { AttributeName: 'userId', KeyType: 'HASH' },
+            { AttributeName: 'dayStartEnd', KeyType: 'RANGE' },
+          ],
+          Projection: { ProjectionType: 'ALL' },
+        },
       ],
       BillingMode: 'PAY_PER_REQUEST',
     }),

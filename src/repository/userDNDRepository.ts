@@ -1,13 +1,17 @@
 import dbClient from '@/db/dbSetup';
 import { PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { v4 as uuidv4 } from 'uuid';
+import { buildUpdateExpression } from '@/utils/buildUpdateExpression';
 
 type UserDNDSettings = {
-  dnd_name: string;
-  dnd_weekdays: number[];
-  dnd_start_time: string;
-  dnd_end_time: string;
+  id: string;
+  name: string;
+  days: number[];
+  start_time: string;
+  end_time: string;
 };
+
+type NewUserDNDSettings = Omit<UserDNDSettings, 'id'>;
 
 async function getAllUserDNDSettings(userId: string) {
   const result = await dbClient.send(
@@ -23,16 +27,17 @@ async function getAllUserDNDSettings(userId: string) {
   return result;
 }
 
-async function getUserDNDSettingsByDayAndTime(userId: string, day: number, time: number) {
+async function getUserActiveDNDSettings(userId: string, day: number, currentTime: string) {
   const result = await dbClient.send(
     new QueryCommand({
       TableName: 'UserDND',
+      IndexName: 'UserDayTimeIndex',
       KeyConditionExpression:
-        'userId = :userId AND contains(:day, dndweekdays#) AND :time BETWEEN dndstarttime# AND dndendtime#',
+        'userId = :userId AND begins_with(dayStartEnd, :day) AND :time BETWEEN start_time# AND end_time#',
       ExpressionAttributeValues: {
         ':userId': { S: userId },
         ':day': { S: day.toString() },
-        ':time': { S: time.toString() },
+        ':time': { S: currentTime },
       },
     }),
   );
@@ -40,17 +45,19 @@ async function getUserDNDSettingsByDayAndTime(userId: string, day: number, time:
   return result;
 }
 
-async function setUserDNDSettings(userId: string, settings: UserDNDSettings) {
+async function setUserDNDSettings(userId: string, settings: NewUserDNDSettings) {
   const result = await dbClient.send(
     new PutItemCommand({
       TableName: 'UserDND',
       Item: {
-        id: { S: uuidv4() },
+        dndId: { S: uuidv4() },
         userId: { S: userId },
-        dnd_name: { S: settings.dnd_name },
-        dnd_weekdays: { SS: settings.dnd_weekdays.map((day) => day.toString()) },
-        dnd_start_time: { S: settings.dnd_start_time },
-        dnd_end_time: { S: settings.dnd_end_time },
+        name: { S: settings.name },
+        days: { SS: settings.days.map((day) => day.toString()) },
+        start_time: { S: settings.start_time },
+        end_time: { S: settings.end_time },
+        createdAt: { S: new Date().toISOString() },
+        updatedAt: { S: new Date().toISOString() },
       },
     }),
   );
@@ -58,29 +65,27 @@ async function setUserDNDSettings(userId: string, settings: UserDNDSettings) {
   return result;
 }
 
-async function updateUserDNDSettings(userId: string, settings: UserDNDSettings) {
+async function updateUserDNDSettings(userId: string, settings: Partial<UserDNDSettings>) {
+  const { id, ...updateSettings } = settings;
+  const { updateExpression, expressionAttributeNames, expressionAttributeValues } =
+    buildUpdateExpression(updateSettings);
+
+  console.log(updateExpression, expressionAttributeNames, expressionAttributeValues);
+
   const result = await dbClient.send(
     new UpdateItemCommand({
       TableName: 'UserDND',
-      Key: { userId: { S: userId } },
-      UpdateExpression:
-        'UPDATE #dnd_name = :dnd_name, #dnd_weekdays = :dnd_weekdays, #dnd_start_time = :dnd_start_time, #dnd_end_time = :dnd_end_time',
-      ExpressionAttributeNames: {
-        '#dnd_name': 'dnd_name',
-        '#dnd_weekdays': 'dnd_weekdays',
-        '#dnd_start_time': 'dnd_start_time',
-        '#dnd_end_time': 'dnd_end_time',
+      Key: {
+        userId: { S: userId },
+        dndId: { S: id },
       },
-      ExpressionAttributeValues: {
-        ':dnd_name': { S: settings.dnd_name },
-        ':dnd_weekdays': { SS: settings.dnd_weekdays.map((day) => day.toString()) },
-        ':dnd_start_time': { S: settings.dnd_start_time },
-        ':dnd_end_time': { S: settings.dnd_end_time },
-      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
+      ConditionExpression: 'attribute_exists(userId) AND attribute_exists(dndId)',
     }),
   );
-
   return result;
 }
 
-export { getAllUserDNDSettings, setUserDNDSettings, updateUserDNDSettings, getUserDNDSettingsByDayAndTime };
+export { getAllUserDNDSettings, setUserDNDSettings, updateUserDNDSettings, getUserActiveDNDSettings };

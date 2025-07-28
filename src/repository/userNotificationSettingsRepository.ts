@@ -1,6 +1,7 @@
 import { QueryCommand, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 
 import dbClient from '@/db/dbSetup';
+import { buildUpdateExpression } from '@/utils/buildUpdateExpression';
 
 type UserNotificationSettings = {
   notification_type: string;
@@ -42,28 +43,28 @@ async function setUserNotificationsSettings(userId: string, settings: UserNotifi
         notificationType: { S: settings.notification_type },
         enabled: { BOOL: settings.enabled },
         ...(settings.channels?.length && { channels: { SS: settings.channels } }),
+        createdAt: { S: new Date().toISOString() },
+        updatedAt: { S: new Date().toISOString() },
       },
     }),
   );
 }
 
 async function updateUserNotificationsSettings(userId: string, settings: UserNotificationSettings) {
+  const { notification_type, ...updateSettings } = settings;
+  const { updateExpression, expressionAttributeNames, expressionAttributeValues } =
+    buildUpdateExpression(updateSettings);
+
   return await dbClient.send(
     new UpdateItemCommand({
       TableName: 'UserNotification',
       Key: {
         userId: { S: userId },
-        notificationType: { S: settings.notification_type },
+        notificationType: { S: notification_type },
       },
-      UpdateExpression: 'SET #enabled = :enabled, #channels = :channels',
-      ExpressionAttributeNames: {
-        '#enabled': 'enabled',
-        '#channels': 'channels',
-      },
-      ExpressionAttributeValues: {
-        ':enabled': { BOOL: settings.enabled },
-        ':channels': { SS: settings.channels },
-      },
+      UpdateExpression: updateExpression,
+      ExpressionAttributeNames: expressionAttributeNames,
+      ExpressionAttributeValues: expressionAttributeValues,
       ConditionExpression: 'attribute_exists(userId) AND attribute_exists(notificationType)',
       ReturnValues: 'ALL_NEW',
     }),

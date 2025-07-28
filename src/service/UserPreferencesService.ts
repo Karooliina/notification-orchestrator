@@ -4,6 +4,7 @@ import {
   updateUserNotificationsSettings,
 } from '@/repository/userNotificationSettingsRepository';
 import { setUserDNDSettings, updateUserDNDSettings, getAllUserDNDSettings } from '@/repository/userDNDRepository';
+import { convertTimeToHoursAndMinutes } from '@/utils/convertTimeToHoursAndMinutes';
 
 type NotificationPreference = {
   notification_type: string;
@@ -12,10 +13,11 @@ type NotificationPreference = {
 };
 
 type DNDPreference = {
-  dnd_name: string;
-  dnd_weekdays: number[];
-  dnd_start_time: string;
-  dnd_end_time: string;
+  id: string;
+  name: string;
+  days: number[];
+  start_time: string;
+  end_time: string;
 };
 
 type UserPreferences = {
@@ -25,11 +27,14 @@ type UserPreferences = {
 };
 
 type UserDNDSettings = {
-  dnd_name: string;
-  dnd_weekdays: number[];
-  dnd_start_time: string;
-  dnd_end_time: string;
+  id: string;
+  name: string;
+  days: number[];
+  start_date: string;
+  end_date: string;
 };
+
+type NewUserDNDSettings = Omit<UserDNDSettings, 'id'>;
 
 type UserNotificationSettings = {
   notification_type: string;
@@ -51,10 +56,11 @@ async function getUserPreferences(userId: string): Promise<UserPreferences> {
 
   const dndPreferencesArray =
     dndPreferences.Items?.map((item) => ({
-      dnd_name: item.dnd_name.S,
-      dnd_weekdays: item.dnd_weekdays.SS.map(Number),
-      dnd_start_time: item.dnd_start_time.S,
-      dnd_end_time: item.dnd_end_time.S,
+      id: item.dndId.S,
+      name: item.name.S,
+      days: item.days.SS.map(Number),
+      start_time: item.start_time.S,
+      end_time: item.end_time.S,
     })) || [];
 
   return {
@@ -67,7 +73,7 @@ async function getUserPreferences(userId: string): Promise<UserPreferences> {
 async function setUserPreferences(
   userId: string,
   notificationSettings: UserNotificationSettings[],
-  dndSettings: UserDNDSettings[],
+  dndSettings: NewUserDNDSettings[],
 ) {
   if (notificationSettings?.length) {
     for (const notificationSetting of notificationSettings) {
@@ -81,10 +87,10 @@ async function setUserPreferences(
   if (dndSettings?.length) {
     for (const dndSetting of dndSettings) {
       await setUserDNDSettings(userId, {
-        dnd_name: dndSetting.dnd_name,
-        dnd_weekdays: dndSetting.dnd_weekdays,
-        dnd_start_time: dndSetting.dnd_start_time,
-        dnd_end_time: dndSetting.dnd_end_time,
+        name: dndSetting.name,
+        days: dndSetting.days,
+        start_time: convertTimeToHoursAndMinutes(dndSetting.start_date),
+        end_time: convertTimeToHoursAndMinutes(dndSetting.end_date),
       });
     }
   }
@@ -99,12 +105,22 @@ async function updateUserPreferences(
 ) {
   if (notificationSettings?.length) {
     for (const notificationSetting of notificationSettings) {
-      await updateUserNotificationsSettings(userId, notificationSetting);
+      await updateUserNotificationsSettings(userId, {
+        notification_type: notificationSetting.notification_type,
+        enabled: notificationSetting.enabled || undefined,
+        channels: notificationSetting.channels || undefined,
+      });
     }
   }
   if (dndSettings?.length) {
     for (const dndSetting of dndSettings) {
-      await updateUserDNDSettings(userId, dndSetting);
+      await updateUserDNDSettings(userId, {
+        id: dndSetting.id,
+        name: dndSetting.name || undefined,
+        days: dndSetting.days || undefined,
+        start_time: convertTimeToHoursAndMinutes(dndSetting.start_date) || undefined,
+        end_time: convertTimeToHoursAndMinutes(dndSetting.end_date) || undefined,
+      });
     }
   }
   return 'User preferences updated successfully';

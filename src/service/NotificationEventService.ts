@@ -1,5 +1,6 @@
-import { getUserDNDSettingsByDayAndTime } from '@/repository/userDNDRepository';
+import { getUserActiveDNDSettings } from '@/repository/userDNDRepository';
 import { getUserNotificationsSettingsByType } from '@/repository/userNotificationSettingsRepository';
+import { getCurrentDayAndTime } from '@/utils/getCurrentDayAndTime';
 
 type NotificationEvent = {
   eventId: string;
@@ -22,6 +23,7 @@ enum NotificationReasonEnum {
   USER_UNSUBSCRIBED = 'USER_UNSUBSCRIBED',
   NO_CHANNELS_CONFIGURED = 'NO_CHANNELS_CONFIGURED',
   USER_DND_ACTIVE = 'USER_DND_ACTIVE',
+  NO_NOTIFICATION_SETTINGS_CONFIGURED = 'NO_NOTIFICATION_SETTINGS_CONFIGURED',
 }
 
 type ProcessedNotificationResult = {
@@ -32,26 +34,28 @@ type ProcessedNotificationResult = {
   channels?: string[];
 };
 
-//TODO Fix this function
 async function processNotificationEvent(event: NotificationEvent): Promise<ProcessedNotificationResult> {
   const { eventId, userId, eventType } = event;
 
   const userNotifications = await getUserNotificationsSettingsByType(userId, eventType);
 
-  const currentDate = new Date();
-  const currentDay = currentDate.getDay();
-  const currentTime = currentDate.getHours();
+  const { currentDay, currentTime } = getCurrentDayAndTime();
 
-  const userDND = await getUserDNDSettingsByDayAndTime(userId, currentDay, currentTime);
+  const userDND = await getUserActiveDNDSettings(userId, currentDay, currentTime);
 
   if (!userNotifications.Items.length || !userDND.Items.length) {
-    return;
+    return {
+      decision: NotificationDecisionEnum.PROCESS_NOTIFICATION,
+      eventId,
+      userId,
+      reason: NotificationReasonEnum.NO_NOTIFICATION_SETTINGS_CONFIGURED,
+    };
   }
 
   const { Items: userNotificationsItems } = userNotifications;
   const { Items: userDNDItems } = userDND;
 
-  if (!userNotificationsItems[0].enabled) {
+  if (!userNotificationsItems.some((item) => item.enabled)) {
     return {
       decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
       eventId,
@@ -60,7 +64,7 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
     };
   }
 
-  if (userNotificationsItems[0].channels.SS.length === 0) {
+  if (userNotificationsItems.some((item) => item.channels.SS.length === 0)) {
     return {
       decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
       eventId,
@@ -70,18 +74,12 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
   }
 
   if (userDNDItems.length) {
-    const { dnd_day, dnd_start_time, dnd_end_time } = userDNDItems[0];
-
-    const isCurrentTimeInDND = currentTime >= Number(dnd_start_time.S) && currentTime <= Number(dnd_end_time.S);
-
-    if (Number(dnd_day.N) === currentDay && isCurrentTimeInDND) {
-      return {
-        decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
-        eventId,
-        userId,
-        reason: NotificationReasonEnum.USER_DND_ACTIVE,
-      };
-    }
+    return {
+      decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
+      eventId,
+      userId,
+      reason: NotificationReasonEnum.USER_DND_ACTIVE,
+    };
   }
 
   return {

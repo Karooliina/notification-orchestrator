@@ -1,23 +1,12 @@
 import { validateData } from '@/middleware/validateData';
 import { processNotificationEvent } from '@/service/NotificationEventService';
 import { Router } from 'express';
-import z from 'zod';
+import { notificationBodySchema } from './schema/processNotificationSchema';
+import { ApiResponse } from '@/types/ApiResponse';
 
 const router = Router();
 
-const notificationBodySchema = z.object({
-  eventId: z.string(),
-  userId: z.string(),
-  eventType: z.string(),
-  timestamp: z.string(),
-  payload: z.object({
-    orderId: z.string(),
-    shippingCarrier: z.string(),
-    trackingNumber: z.string(),
-  }),
-});
-
-router.post('/', validateData(notificationBodySchema), async (req, res) => {
+router.post('/', validateData(notificationBodySchema), async (req, res): Promise<ApiResponse> => {
   try {
     const result = await processNotificationEvent(req.body);
 
