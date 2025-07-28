@@ -1,0 +1,761 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Notification Orchestrator API",
+    "version": "1.0.0",
+    "description": "API for managing notification events and user preferences in the Notification Orchestrator system"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "ApiSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          }
+        },
+        "required": ["success", "data"]
+      },
+      "ApiErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": ["success", "error"]
+      },
+      "NotificationEvent": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "description": "Unique identifier for the event"
+          },
+          "userId": {
+            "type": "string",
+            "description": "ID of the user for whom the notification is intended"
+          },
+          "eventType": {
+            "type": "string",
+            "description": "Type of the notification event"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp when the event occurred"
+          },
+          "payload": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "description": "Order identifier"
+              },
+              "shippingCarrier": {
+                "type": "string",
+                "description": "Shipping carrier name"
+              },
+              "trackingNumber": {
+                "type": "string",
+                "description": "Package tracking number"
+              }
+            },
+            "required": ["orderId", "shippingCarrier", "trackingNumber"]
+          }
+        },
+        "required": ["eventId", "userId", "eventType", "timestamp", "payload"]
+      },
+      "NotificationPreference": {
+        "type": "object",
+        "properties": {
+          "notification_type": {
+            "type": "string",
+            "description": "Type of notification"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether notification is enabled for this type"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["email", "sms", "push"]
+            },
+            "description": "Available channels for this notification type"
+          }
+        },
+        "required": ["notification_type", "enabled"]
+      },
+      "DndPreference": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the do not disturb window",
+            "minLength": 1
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "description": "Days of the week (0=Sunday, 6=Saturday)"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Start date/time of the DND window"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date/time of the DND window"
+          }
+        },
+        "required": ["name", "days", "start_date", "end_date"]
+      },
+      "UpdateDndPreference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the DND preference to update"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the do not disturb window",
+            "minLength": 1
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6
+            },
+            "description": "Days of the week (0=Sunday, 6=Saturday)"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Start date/time of the DND window"
+          },
+          "end_date": {
+            "type": "string",
+            "description": "End date/time of the DND window"
+          }
+        },
+        "required": ["id"]
+      },
+      "UpdateNotificationPreference": {
+        "type": "object",
+        "properties": {
+          "notification_type": {
+            "type": "string",
+            "description": "Type of notification"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this notification type is enabled"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["email", "sms", "push"]
+            },
+            "description": "Available channels for this notification type"
+          }
+        },
+        "required": ["notification_type"]
+      },
+      "UserPreferences": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "ID of the user"
+          },
+          "notification_preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationPreference"
+            }
+          },
+          "dnd_preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DndPreference"
+            }
+          }
+        }
+      },
+      "SetUserPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "notification_preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationPreference"
+            },
+            "nullable": true
+          },
+          "dnd_preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DndPreference"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "UpdateUserPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "notification_preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateNotificationPreference"
+            }
+          },
+          "dnd_preferences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateDndPreference"
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check endpoint",
+        "description": "Check if the service is healthy",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiSuccessResponse"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "string",
+                          "example": "Healthy"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Process a notification event",
+        "description": "Process a notification event and determine whether to send the notification based on user preferences and DND settings",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event processed successfully - DO_NOT_NOTIFY decision",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiSuccessResponse"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "decision": {
+                              "type": "string",
+                              "example": "DO_NOT_NOTIFY"
+                            },
+                            "eventId": {
+                              "type": "string",
+                              "example": "123e4567-e89b-12d3-a456-426614174000"
+                            },
+                            "userId": {
+                              "type": "string",
+                              "example": "user123"
+                            },
+                            "reason": {
+                              "type": "string",
+                              "enum": [
+                                "DND_ACTIVE",
+                                "USER_UNSUBSCRIBED",
+                                "NO_CHANNELS_CONFIGURED",
+                                "NO_NOTIFICATION_SETTINGS_CONFIGURED"
+                              ],
+                              "example": "DND_ACTIVE"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Event processed successfully - notification will be sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiSuccessResponse"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "decision": {
+                              "type": "string",
+                              "example": "PROCESS_NOTIFICATION"
+                            },
+                            "eventId": {
+                              "type": "string",
+                              "example": "123e4567-e89b-12d3-a456-426614174000"
+                            },
+                            "userId": {
+                              "type": "string",
+                              "example": "user123"
+                            },
+                            "channels": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "enum": ["email", "sms", "push"]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "Failed to process notification event"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/user-preferences/{userId}": {
+      "get": {
+        "tags": ["User Preferences"],
+        "summary": "Get user preferences",
+        "description": "Retrieve notification and DND preferences for a specific user",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User preferences retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiSuccessResponse"
+                    },
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/UserPreferences"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User preferences not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "User preferences not found"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "Failed to get user preferences"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["User Preferences"],
+        "summary": "Set user preferences",
+        "description": "Create or set notification and DND preferences for a user. User can only modify their own preferences.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the user"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User preferences set successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data or no preferences provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "No notification or DND settings provided"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - user can only modify their own preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "You are not allowed to modify this resource"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "Failed to set user preferences"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["User Preferences"],
+        "summary": "Update user preferences",
+        "description": "Update existing notification and DND preferences for a user. User can only modify their own preferences.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID of the user"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User preferences updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data or no preferences provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "No notification or DND settings provided"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - user can only modify their own preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "You are not allowed to modify this resource"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiErrorResponse"
+                    },
+                    {
+                      "properties": {
+                        "error": {
+                          "example": "Failed to update user preferences"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Notifications",
+      "description": "Notification processing endpoints"
+    },
+    {
+      "name": "User Preferences",
+      "description": "User preference management endpoints"
+    }
+  ]
+}
