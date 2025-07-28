@@ -6,7 +6,7 @@ Another microservcie written in Node.js, to orchestrate notifications using Dyna
 
 ## API documentation:
 
-Swagger documentation
+Swagger documentation available on http://localhost:4002/api/v1/docs
 
 ## How to run?
 
@@ -38,6 +38,9 @@ Your application will be available at http://localhost:4002.
 ### Generate Authorization token
 
 To perform authorized requests, run `npm run generate-token` command. Use saved token in `Authorization: Bearer ...` header.
+
+## How to run tests
+
 
 ## DynamoDB Tables
 
