@@ -3,7 +3,7 @@ import {
   setUserNotificationsSettings,
   updateUserNotificationsSettings,
 } from '@/repository/userNotificationSettingsRepository';
-import { setUserDNDSettings, updateUserDNDSettings, getUserDNDSettings } from '@/repository/userDNDRepository';
+import { setUserDNDSettings, updateUserDNDSettings, getAllUserDNDSettings } from '@/repository/userDNDRepository';
 
 type NotificationPreference = {
   notification_type: string;
@@ -41,16 +41,16 @@ async function getUserPreferences(userId: string): Promise<UserPreferences> {
   const notificationPreferences = await getAllUserNotificationsSettings(userId);
 
   const notificationPreferencesArray =
-    notificationPreferences.Responses?.UserNotification?.map((item) => ({
-      notification_type: item.notification_type.S,
+    notificationPreferences.Items?.map((item) => ({
+      notification_type: item.notificationType.S,
       enabled: item.enabled.BOOL,
       channels: item.channels?.SS || [],
     })) || [];
 
-  const dndPreferences = await getUserDNDSettings(userId);
+  const dndPreferences = await getAllUserDNDSettings(userId);
 
   const dndPreferencesArray =
-    dndPreferences.Responses?.UserDND?.map((item) => ({
+    dndPreferences.Items?.map((item) => ({
       dnd_name: item.dnd_name.S,
       dnd_weekdays: item.dnd_weekdays.SS.map(Number),
       dnd_start_time: item.dnd_start_time.S,
@@ -92,7 +92,6 @@ async function setUserPreferences(
   return 'User preferences set successfully';
 }
 
-//TODO Fix updates
 async function updateUserPreferences(
   userId: string,
   notificationSettings: UserNotificationSettings[],

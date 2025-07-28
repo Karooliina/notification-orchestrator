@@ -1,5 +1,6 @@
 import dbClient from '@/db/dbSetup';
-import { BatchGetItemCommand, PutItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand, QueryCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { v4 as uuidv4 } from 'uuid';
 
 type UserDNDSettings = {
   dnd_name: string;
@@ -8,13 +9,30 @@ type UserDNDSettings = {
   dnd_end_time: string;
 };
 
-async function getUserDNDSettings(userId: string) {
+async function getAllUserDNDSettings(userId: string) {
   const result = await dbClient.send(
-    new BatchGetItemCommand({
-      RequestItems: {
-        UserDND: {
-          Keys: [{ userId: { S: userId } }],
-        },
+    new QueryCommand({
+      TableName: 'UserDND',
+      KeyConditionExpression: 'userId = :userId',
+      ExpressionAttributeValues: {
+        ':userId': { S: userId },
+      },
+    }),
+  );
+
+  return result;
+}
+
+async function getUserDNDSettingsByDayAndTime(userId: string, day: number, time: number) {
+  const result = await dbClient.send(
+    new QueryCommand({
+      TableName: 'UserDND',
+      KeyConditionExpression:
+        'userId = :userId AND contains(:day, dndweekdays#) AND :time BETWEEN dndstarttime# AND dndendtime#',
+      ExpressionAttributeValues: {
+        ':userId': { S: userId },
+        ':day': { S: day.toString() },
+        ':time': { S: time.toString() },
       },
     }),
   );
@@ -27,6 +45,7 @@ async function setUserDNDSettings(userId: string, settings: UserDNDSettings) {
     new PutItemCommand({
       TableName: 'UserDND',
       Item: {
+        id: { S: uuidv4() },
         userId: { S: userId },
         dnd_name: { S: settings.dnd_name },
         dnd_weekdays: { SS: settings.dnd_weekdays.map((day) => day.toString()) },
@@ -45,7 +64,7 @@ async function updateUserDNDSettings(userId: string, settings: UserDNDSettings) 
       TableName: 'UserDND',
       Key: { userId: { S: userId } },
       UpdateExpression:
-        'SET #dnd_name = :dnd_name, #dnd_weekdays = :dnd_weekdays, #dnd_start_time = :dnd_start_time, #dnd_end_time = :dnd_end_time',
+        'UPDATE #dnd_name = :dnd_name, #dnd_weekdays = :dnd_weekdays, #dnd_start_time = :dnd_start_time, #dnd_end_time = :dnd_end_time',
       ExpressionAttributeNames: {
         '#dnd_name': 'dnd_name',
         '#dnd_weekdays': 'dnd_weekdays',
@@ -64,4 +83,4 @@ async function updateUserDNDSettings(userId: string, settings: UserDNDSettings) 
   return result;
 }
 
-export { getUserDNDSettings, setUserDNDSettings, updateUserDNDSettings };
+export { getAllUserDNDSettings, setUserDNDSettings, updateUserDNDSettings, getUserDNDSettingsByDayAndTime };

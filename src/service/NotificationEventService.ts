@@ -1,4 +1,4 @@
-import { getUserDNDSettings } from '@/repository/userDNDRepository';
+import { getUserDNDSettingsByDayAndTime } from '@/repository/userDNDRepository';
 import { getUserNotificationsSettingsByType } from '@/repository/userNotificationSettingsRepository';
 
 type NotificationEvent = {
@@ -37,16 +37,21 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
   const { eventId, userId, eventType } = event;
 
   const userNotifications = await getUserNotificationsSettingsByType(userId, eventType);
-  const userDND = await getUserDNDSettings(userId);
 
-  if (!userNotifications || !userDND) {
+  const currentDate = new Date();
+  const currentDay = currentDate.getDay();
+  const currentTime = currentDate.getHours();
+
+  const userDND = await getUserDNDSettingsByDayAndTime(userId, currentDay, currentTime);
+
+  if (!userNotifications.Items.length || !userDND.Items.length) {
     return;
   }
 
-  const { Item } = userNotifications;
-  const { enabled, channels } = Item;
+  const { Items: userNotificationsItems } = userNotifications;
+  const { Items: userDNDItems } = userDND;
 
-  if (!enabled) {
+  if (!userNotificationsItems[0].enabled) {
     return {
       decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
       eventId,
@@ -55,7 +60,7 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
     };
   }
 
-  if (channels.SS.length === 0) {
+  if (userNotificationsItems[0].channels.SS.length === 0) {
     return {
       decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
       eventId,
@@ -64,12 +69,8 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
     };
   }
 
-  if (userDND) {
-    const { Item } = userDND;
-    const { dnd_day, dnd_start_time, dnd_end_time } = Item;
-    const currentDate = new Date();
-    const currentDay = currentDate.getDay();
-    const currentTime = currentDate.getHours();
+  if (userDNDItems.length) {
+    const { dnd_day, dnd_start_time, dnd_end_time } = userDNDItems[0];
 
     const isCurrentTimeInDND = currentTime >= Number(dnd_start_time.S) && currentTime <= Number(dnd_end_time.S);
 
@@ -87,7 +88,7 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
     decision: NotificationDecisionEnum.PROCESS_NOTIFICATION,
     eventId,
     userId,
-    channels: channels.SS,
+    channels: userNotificationsItems[0].channels.SS,
   };
 }
 

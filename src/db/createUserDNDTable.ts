@@ -14,11 +14,11 @@ export const createUserDNDTable = async () => {
       TableName: 'UserDND',
       KeySchema: [
         { AttributeName: 'userId', KeyType: 'HASH' },
-        { AttributeName: 'dnd_day_index', KeyType: 'HASH' },
+        { AttributeName: 'dndweekdays#dndstarttime#dndendtime', KeyType: 'RANGE' },
       ],
       AttributeDefinitions: [
         { AttributeName: 'userId', AttributeType: 'S' },
-        { AttributeName: 'dnd_day', AttributeType: 'S' },
+        { AttributeName: 'dndweekdays#dndstarttime#dndendtime', AttributeType: 'S' },
       ],
       BillingMode: 'PAY_PER_REQUEST',
     }),

@@ -19,3 +19,6 @@
 /data
 
 /docker
+
+# Token
+token.txt

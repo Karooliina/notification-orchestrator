@@ -22,14 +22,14 @@ router.post('/', validateData(notificationBodySchema), async (req, res) => {
     const result = await processNotificationEvent(req.body);
 
     if (result.decision === 'DO_NOT_NOTIFY') {
-      res.status(200).json({ statusCode: 200, success: true, data: result });
+      res.status(200).json({ success: true, data: result });
       return;
     }
 
-    res.status(202).json({ statusCode: 202, success: true, data: result });
+    res.status(202).json({ success: true, data: result });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ statusCode: 500, success: false, error: 'Failed to process notification event' });
+    res.status(500).json({ success: false, error: 'Failed to process notification event' });
   }
 });
 
