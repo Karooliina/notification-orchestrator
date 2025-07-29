@@ -45,7 +45,7 @@ The project follows **3-layer architecture**:
 
 ## API documentation:
 
-Swagger documentation available on http://localhost:4002/api/v1/docs
+Swagger documentation available locally on http://localhost:4002/api/v1/docs
 
 ## How to run?
 
