@@ -4,10 +4,11 @@ import fs from 'fs';
 function generateJWT() {
   const args = process.argv.slice(2);
   const userId = args[0];
+  const env = args[1];
 
   if (!userId) {
     console.error('Error: Please provide a userId as a command line argument');
-    console.log('Usage: npx ts-node src/scripts/generateJWT.ts <userId>');
+    console.log('Usage: npx ts-node src/scripts/generateJWT.ts <userId> <env>');
     process.exit(1);
   }
 
@@ -15,13 +16,15 @@ function generateJWT() {
 
   console.log('Token: ', token);
 
-  fs.writeFile('token.txt', token, (err) => {
+  const filePath = `./token-${env}.txt`;
+
+  fs.writeFile(filePath, token, (err) => {
     if (err) {
       console.error('Error writing token to file: ', err);
     }
   });
 
-  console.log('Token written to file: token.txt');
+  console.log(`Token written to file: ${filePath}`);
 
   return;
 }

@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 
-const dbClient = new DynamoDBClient({
+export const dbClient = new DynamoDBClient({
   region: process.env.AWS_REGION,
   endpoint: process.env.DB_URL,
   credentials: {
@@ -8,5 +8,3 @@ const dbClient = new DynamoDBClient({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
-
-export default dbClient;

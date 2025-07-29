@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import { getUserPreferences, setUserPreferences, updateUserPreferences } from './userPreferencesService';
 
 vi.mock('@/repository/userNotificationSettingsRepository', () => ({
@@ -31,6 +31,11 @@ describe('UserPreferencesService', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterAll(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   it('should return the correct user preferences', async () => {

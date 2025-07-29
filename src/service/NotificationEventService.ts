@@ -38,12 +38,19 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
   const { eventId, userId, eventType } = event;
 
   const userNotifications = await getUserNotificationsSettingsByType(userId, eventType);
-
   const { currentDay, currentTime } = getCurrentDayAndTime();
-
   const userDND = await getUserActiveDNDSettings(userId, currentDay, currentTime);
 
-  if (!userNotifications.Items.length && !userDND.Items.length) {
+  if (userDND.Items.length) {
+    return {
+      decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
+      eventId,
+      userId,
+      reason: NotificationReasonEnum.USER_DND_ACTIVE,
+    };
+  }
+
+  if (!userNotifications.Items.length) {
     return {
       decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
       eventId,
@@ -53,7 +60,6 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
   }
 
   const { Items: userNotificationsItems } = userNotifications;
-  const { Items: userDNDItems } = userDND;
 
   if (userNotificationsItems.some((item) => !item.enabled.BOOL)) {
     return {
@@ -70,15 +76,6 @@ async function processNotificationEvent(event: NotificationEvent): Promise<Proce
       eventId,
       userId,
       reason: NotificationReasonEnum.NO_CHANNELS_CONFIGURED,
-    };
-  }
-
-  if (userDNDItems.length) {
-    return {
-      decision: NotificationDecisionEnum.DO_NOT_NOTIFY,
-      eventId,
-      userId,
-      reason: NotificationReasonEnum.USER_DND_ACTIVE,
     };
   }
 

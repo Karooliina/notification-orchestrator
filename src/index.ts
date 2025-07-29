@@ -14,7 +14,7 @@ import swaggerDocument from './api/v1/controller/docs/apiDocs.json';
 
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      origin: 'http://localhost:4002',
     }),
   );
   app.use(bodyParser.json());
@@ -34,6 +34,9 @@ import swaggerDocument from './api/v1/controller/docs/apiDocs.json';
   });
 
   console.log('Creating tables');
+
   await createUserDNDTable();
   await createUserNotificationTable();
+
+  console.log('Tables created');
 })();

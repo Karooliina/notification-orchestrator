@@ -67,9 +67,11 @@ Your application will be available at http://localhost:4002.
 
 To perform authorized requests, run `npm run generate-token` command. Use saved token in `Authorization: Bearer ...` header.
 
-## How to run tests
+## How to run tests?
 
-`npm run test`
+Generate Auth token with user test id for integration tests. Save it in .env file (`TEST_JWT_TOKEN`, `TEST_USER_ID`).
+Setup dynamoDb test container with command `npm run test:integration:setup`
+then run `npm run test` to start vitest.
 
 ## 🗄️ DynamoDB Tables Structure & Access Patterns
 

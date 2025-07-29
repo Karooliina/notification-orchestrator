@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { processNotificationEvent } from './notificationEventService';
 import { getUserNotificationsSettingsByType } from '@/repository/userNotificationSettingsRepository';
 import { getUserActiveDNDSettings } from '@/repository/userDNDRepository';
@@ -30,6 +30,11 @@ vi.mock('@/utils/getCurrentDayAndTime', () => ({
 describe('NotificationEventService', () => {
   beforeAll(() => {
     vi.useFakeTimers().setSystemTime(new Date('2025-01-01T12:00:00.000Z'));
+  });
+
+  afterAll(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   it('should return a notification event: DO_NOT_NOTIFY and reason: NO_NOTIFICATION_SETTINGS_CONFIGURED', async () => {
