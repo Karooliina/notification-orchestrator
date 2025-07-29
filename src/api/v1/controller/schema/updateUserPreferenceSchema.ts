@@ -9,9 +9,10 @@ const updateNotificationPreferenceSchema = z.object({
 const updateDndPreferenceSchema = z.object({
   id: z.string(),
   name: z.string().min(1, { message: 'Do not disturb window name is required' }).optional(),
-  days: z.array(z.number().min(0).max(6)).optional(),
+  day: z.number().min(0).max(6).optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
+  all_day: z.boolean().optional(),
 });
 
 export const updateUserPreferencesSchema = z.object({

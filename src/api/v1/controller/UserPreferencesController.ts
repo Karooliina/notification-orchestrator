@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getUserPreferences, setUserPreferences, updateUserPreferences } from '@/service/UserPreferencesService';
+import { getUserPreferences, setUserPreferences, updateUserPreferences } from '@/service/userPreferencesService';
 import { validateData } from '@/middleware/validateData';
 import { AuthorizedRequest } from '@/middleware/authMiddleware';
 import { setUserPreferencesSchema } from './schema/setUserPreferenceSchema';

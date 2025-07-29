@@ -13,7 +13,7 @@ function generateJWT() {
 
   const token = jwt.sign({ userId }, process.env.JWT_SECRET as string, { expiresIn: '30d' });
 
-  console.log('Your token is: ', token);
+  console.log('Token: ', token);
 
   fs.writeFile('token.txt', token, (err) => {
     if (err) {
@@ -21,7 +21,7 @@ function generateJWT() {
     }
   });
 
-  console.log('Token written to file');
+  console.log('Token written to file: token.txt');
 
   return;
 }

@@ -10,11 +10,18 @@ export function buildUpdateExpression(settings: Record<string, any>) {
   dynamicExpressionAttributeValues[':updatedAt'] = { S: new Date().toISOString() };
 
   for (const [key, value] of Object.entries(settings)) {
-    if (value) {
+    if (value !== undefined && value !== null) {
       dynamicUpdateExpression.push(`#${key} = :${key}`);
       dynamicExpressionAttributeNames[`#${key}`] = key;
       const valueType = mapExpressionAttributeValuesType(value);
-      dynamicExpressionAttributeValues[`:${key}`] = { [valueType]: value };
+
+      if (valueType === 'N') {
+        dynamicExpressionAttributeValues[`:${key}`] = { N: String(value) };
+      } else if (valueType === 'NS') {
+        dynamicExpressionAttributeValues[`:${key}`] = { [valueType]: value.map(String) };
+      } else {
+        dynamicExpressionAttributeValues[`:${key}`] = { [valueType]: value };
+      }
     }
   }
 

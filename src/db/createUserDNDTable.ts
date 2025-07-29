@@ -20,14 +20,14 @@ export const createUserDNDTable = async () => {
       AttributeDefinitions: [
         { AttributeName: 'userId', AttributeType: 'S' },
         { AttributeName: 'dndId', AttributeType: 'S' },
-        { AttributeName: 'dayStartEnd', AttributeType: 'S' },
+        { AttributeName: 'dayTimeSk', AttributeType: 'S' },
       ],
       GlobalSecondaryIndexes: [
         {
           IndexName: 'UserDayTimeIndex',
           KeySchema: [
             { AttributeName: 'userId', KeyType: 'HASH' },
-            { AttributeName: 'dayStartEnd', KeyType: 'RANGE' },
+            { AttributeName: 'dayTimeSk', KeyType: 'RANGE' },
           ],
           Projection: { ProjectionType: 'ALL' },
         },

@@ -1,5 +1,5 @@
 import { validateData } from '@/middleware/validateData';
-import { processNotificationEvent } from '@/service/NotificationEventService';
+import { processNotificationEvent } from '@/service/notificationEventService';
 import { Router } from 'express';
 import { notificationBodySchema } from './schema/processNotificationSchema';
 import { ApiResponse } from '@/types/ApiResponse';

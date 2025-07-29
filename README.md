@@ -41,6 +41,7 @@ To perform authorized requests, run `npm run generate-token` command. Use saved 
 
 ## How to run tests
 
+`npm run test`
 
 ## DynamoDB Tables
 

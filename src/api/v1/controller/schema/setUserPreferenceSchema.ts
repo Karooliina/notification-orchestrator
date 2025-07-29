@@ -8,9 +8,10 @@ const setNotificationPreferenceSchema = z.object({
 
 const setDndPreferenceSchema = z.object({
   name: z.string().min(1, { message: 'Do not disturb window name is required' }),
-  days: z.array(z.number().min(0).max(6)),
-  start_date: z.string(),
-  end_date: z.string(),
+  day: z.number().min(0).max(6),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  all_day: z.boolean(),
 });
 
 export const setUserPreferencesSchema = z.object({

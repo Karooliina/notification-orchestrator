@@ -116,14 +116,11 @@
             "description": "Name of the do not disturb window",
             "minLength": 1
           },
-          "days": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 6
-            },
-            "description": "Days of the week (0=Sunday, 6=Saturday)"
+          "day": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "Day of the week (0=Sunday, 6=Saturday)"
           },
           "start_date": {
             "type": "string",
@@ -132,9 +129,13 @@
           "end_date": {
             "type": "string",
             "description": "End date/time of the DND window"
+          },
+          "all_day": {
+            "type": "boolean",
+            "description": "Whether the DND window is all day"
           }
         },
-        "required": ["name", "days", "start_date", "end_date"]
+        "required": ["name", "day", "start_date", "end_date", "all_day"]
       },
       "UpdateDndPreference": {
         "type": "object",
@@ -148,14 +149,11 @@
             "description": "Name of the do not disturb window",
             "minLength": 1
           },
-          "days": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 6
-            },
-            "description": "Days of the week (0=Sunday, 6=Saturday)"
+          "day": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "Day of the week (0=Sunday, 6=Saturday)"
           },
           "start_date": {
             "type": "string",
@@ -164,6 +162,10 @@
           "end_date": {
             "type": "string",
             "description": "End date/time of the DND window"
+          },
+          "all_day": {
+            "type": "boolean",
+            "description": "Whether the DND window is all day"
           }
         },
         "required": ["id"]
