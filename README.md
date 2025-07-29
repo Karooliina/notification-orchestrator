@@ -1,5 +1,16 @@
 # Notification Orchestrator
 
+- Table of Contents:
+
+* [Description](#description)
+* [Architecture Overview](#architecture-overview)
+* [API documentation](#api-documentation)
+* [How to run?](#how-to-run)
+* [How to run tests?](#how-to-run-tests)
+* [DynamoDB Tables Structure & Access Patterns](#️-dynamodb-tables-structure--access-patterns)
+* [Key Design Rationale](#-key-design-rationale)
+* [System Assumptions & Dependencies](#system-assumptions--dependencies)
+
 ## Description
 
 Another microservcie written in Node.js, to orchestrate notifications using DynamoDB database.
