@@ -73,6 +73,9 @@ Generate Auth token with user test id for integration tests. Save it in .env fil
 Setup dynamoDb test container with command `npm run test:integration:setup`
 then run `npm run test` to start vitest.
 
+Integration tests are located in `src/__test__`.
+Unit tests are next to tested functions.
+
 ## 🗄️ DynamoDB Tables Structure & Access Patterns
 
 ### **1. UserDND Table**
